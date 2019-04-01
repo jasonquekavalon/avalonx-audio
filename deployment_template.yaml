@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: avalonx-audio
+spec:
+  selector:
+    app: avalonx-audio
+    version: latest
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: avalonx-audio-latest
+spec:
+  selector:
+    matchLabels:
+      app: avalonx-audio
+      version: latest
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 100%
+  template:
+    metadata:
+      labels:
+        app: avalonx-audio
+        version: latest
+    spec:
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: speech-key
+      containers:
+      - name: webservice
+        image: eu.gcr.io/avalonx-dev/avalonx-audio:<IMAGE_VERSION>
+        ports:
+        - containerPort: 80
+        readinessProbe: # Used during deployment to see if pod is ready to serve traffic
+          httpGet:
+            path: /healthz
+            port: 80
+        livenessProbe: # Used continiously after deployment to see if pod is still alive
+          httpGet:
+            path: /healthz
+            port: 80
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json

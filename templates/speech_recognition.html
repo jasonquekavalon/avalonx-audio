@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <!-- fonts-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,600")>
+
+    <link rel="stylesheet" href="static/styles/fontawesome-all.min.css">
+    
+    <!-- css scripts -->
+    <link rel="stylesheet" href="static/styles/bootstrap.min.css">
+    <link rel="stylesheet" href="static/styles/tooplate-style.css">
+    
+    <!-- favicon -->
+    <link rel="shortcut icon" type="image/png" href="static/img/icon.ico"/>
+
+    <!-- js scripts -->
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8"></script>
+    <script>
+        var renderPage = true;
+
+    if(navigator.userAgent.indexOf('MSIE')!==-1
+        || navigator.appVersion.indexOf('Trident/') > 0){
+           alert("Please view this in a modern browser such as Chrome or Microsoft Edge.");
+           renderPage = false;
+    }
+    </script>
+</head>
+
+<body>
+    <!-- Loader -->
+    <div id="loader-wrapper">
+        <div id="loader"></div>
+        <div class="loader-section section-left"></div>
+        <div class="loader-section section-right"></div>
+    </div>
+    
+    <!-- Page Content -->
+    <div class="container-fluid tm-main">
+        <div class="row tm-main-row">
+
+            <!-- Sidebar -->
+            <div id="tmSideBar" class="col-xl-3 col-lg-4 col-md-12 col-sm-12 sidebar">
+                <button id="tmMainNavToggle" class="menu-icon">&#9776;</button>
+
+                <div class="inner">
+                    <nav id="tmMainNav" class="tm-main-nav">
+                        <ul>
+                            <li>
+                                <a href="/" id="tmNavLink1" class="scrolly" data-bg-img="constructive_bg_10.jpg" data-page="#tm-section-1">
+                                    <i class="fas fa-home tm-nav-fa-icon"></i>
+                                    <span>Chat With Me!</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/products" class="scrolly active" data-bg-img="constructive_bg_10.jpg" data-page="#tm-section-2">
+                                    <i class="fas fa-map tm-nav-fa-icon"></i>
+                                    <span>Play a game!</span>
+                                </a>
+                            </li>                            
+                            <li>
+                                <a href="/company" class="scrolly" data-bg-img="constructive_bg_10.jpg"  data-page="#tm-section-3">
+                                    <i class="fas fa-users tm-nav-fa-icon"></i>
+                                    <span>About Avalon Solutions</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/contact" id="tmNavLink4" class="scrolly" data-bg-img="constructive_bg_10.jpg"  data-page="#tm-section-4">
+                                    <i class="fas fa-comments tm-nav-fa-icon"></i>
+                                    <span>Contact Us</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            
+            <div class="col-xl-9 col-lg-8 col-md-12 col-sm-12 tm-content">
+            <!-- game 3 -->
+            <section>
+                <div class="row mb-4">
+                    <header class="col-xl-12"><h1 class="tm-text-shadow">Speech Recognition</h1></header>    
+                </div>
+                
+                <h2>{{ response }}</h2>
+                <form id="connect" method="POST" action="#" novalidate>
+                    <input type="submit" value="Record">
+                </form>
+                <form id="disconnect" method="POST" action="#" novalidate>
+                    <input type="submit" value="Stop">
+                </form>
+                
+                <h3>Receive:</h3>
+                <h3 id="log"></h3>
+                <script type="text/javascript">
+                var namespace = '/test';
+                      var socket = null;
+                      var mediaStream = null;
+                
+                      // prepare button state
+                      $('#disconnect input')[0].disabled = true;
+                
+                      // audio functions
+                      function initializeRecorder(stream){
+                         mediaStream = stream;
+                
+                         // get sample rate
+                         audio_context = new AudioContext;
+                         sampleRate = audio_context.sampleRate;
+                         console.log('<sample_rate>', sampleRate);
+                         socket.emit('sample_rate', sampleRate);
+                
+                         var audioInput = audio_context.createMediaStreamSource(stream);
+                
+                         console.log("Created media stream.");
+                
+                         var bufferSize = 4096;
+                         // record only 1 channel
+                         var recorder = audio_context.createScriptProcessor(bufferSize, 1, 1);
+                         // specify the processing function
+                         recorder.onaudioprocess = recorderProcess;
+                         // connect stream to our recorder
+                         audioInput.connect(recorder);
+                         // connect our recorder to the previous destination
+                         recorder.connect(audio_context.destination);          
+                      }
+                      function recorderProcess(e) {
+                        var left = e.inputBuffer.getChannelData(0);
+                        socket.emit('audio', left);
+                        //socket.emit('audio', convertFloat32ToInt16(left));
+                      }
+                      function convertFloat32ToInt16(buffer) {
+                        l = buffer.length;
+                        buf = new Int16Array(l);
+                        while (l--) {
+                          buf[l] = Math.min(1, buffer[l])*0x7FFF;
+                        }
+                        console.log(buf);
+                        return buf.buffer;
+                      }
+                
+                      $('form#connect').submit(function(event) {
+                          if(socket == null){
+                            socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+                            socket.on('connect', function() {
+                                socket.emit('my_event', {data: 'I\'m connected!'});
+                                navigator.getUserMedia({audio: true}, initializeRecorder, function(a, b, c){
+                                  console.log(a, b, c);
+                                });
+                            });
+                            socket.on('my_response', function(msg) {
+                                $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
+                            });
+                          }
+                          else {
+                            socket.disconnect();
+                            socket.connect();
+                          }
+                          $('#connect input')[0].disabled = true;
+                          $('#disconnect input')[0].disabled = false;
+                          return false;
+                      });
+                      $('form#disconnect').submit(function(event) {
+                          mediaStream.getAudioTracks()[0].stop();
+                          audio_context.close();
+                          socket.emit('disconnect_request');
+                          $('#connect input')[0].disabled = false;
+                          $('#disconnect input')[0].disabled = true;
+                          return false;
+                      });
+                      </script>
+                </body>
+                
+            </section>        
+
+                        <!-- ending -->
+                        <div id="preload-01"></div>
+                        <div id="preload-02"></div>
+                        <div id="preload-03"></div>
+                        <div id="preload-04"></div>
+                
+                        <!-- js scripts -->
+        <script type="text/javascript" src="static/js/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="static/js/jquery.backstretch.min.js"></script>
+        <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
+        
+         <!-- Slick Carousel -->
+         <script>
+            // Setup Nav
+            function setupNav() {
+                // Add Event Listener to each Nav item
+               $(".tm-main-nav a").click(function(e){           
+                  var currentNavItem = $(this);
+                  // Hide the nav on mobile
+                  $("#tmSideBar").removeClass("show");
+              });        
+            }
+   
+             // Setup Nav Toggle Button
+             function setupNavToggle() {
+   
+               $("#tmMainNavToggle").on("click", function(){
+                   $(".sidebar").toggleClass("show");
+               });
+             }
+             // Everything is loaded including images.
+             $(window).on("load", function(){
+                 // Render the page on modern browser only.
+                 if(renderPage) {
+                   // Remove loader
+                     $('body').addClass('loaded');
+                     $("#tm-section-2").fadeIn();
+                    // Set up background first page
+                    var bgImg = $("#tmNavLink1").data("bgImg");
+                    $.backstretch("static/img/" + bgImg, {fade: 500});
+   
+                    // Setup Carousel, Nav, and Nav Toggle
+                   setupNav();
+                   setupNavToggle();
+   
+                 }              
+           });
+   
+           </script>
+       </body>
+   </html>
