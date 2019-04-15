@@ -19,21 +19,15 @@ socketio = SocketIO(app, binary=True, async_mode='eventlet')
 def health_check():
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
-@socketio.on('my_event', namespace='/test')
-def test_message(message):
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': message['data'], 'count': session['receive_count']})
-
 @socketio.on('connect', namespace='/test')
 def test_connect():
     session['audio'] = []
+    emit('my_response',
+                    {'data': 'I\'m connected!'})
 
 @socketio.on('sample_rate', namespace='/test')
 def handle_my_sample_rate(sampleRate):
     session['sample_rate'] = sampleRate
-    # send some message to front
-    session['receive_count'] = session.get('receive_count', 0) + 1
 
 @socketio.on('audio', namespace='/test')
 def handle_my_custom_event(audio):
@@ -41,6 +35,11 @@ def handle_my_custom_event(audio):
     session['audio'] += values
 
 @socketio.on('disconnect_request', namespace='/test')
+def first_disconnect():
+    emit('my_response',
+        {'data': 'Detecting language...'})
+
+@socketio.on('test_disconnect', namespace='/test')
 def test_disconnect():
     sample_rate = session['sample_rate']
     my_audio = np.array(session['audio'], np.float32)
@@ -66,12 +65,12 @@ def test_disconnect():
         seventh_lang = 'nb-NO' #norwegian
         eighth_lang = 'it-IT' #italian
 
-        language = {'en-us': 'english', 'es': 'spanish', 'cmn-hans-cn': 'chinese', 'pl-PL': 'polish', 'de-de': 'german', 'sv-SE': 'swedish', 'nb-no': 'norwegian', 'it-it': 'italian'}
+        language = {'en-us': 'English', 'es': 'Spanish', 'cmn-hans-cn': 'Chinese', 'pl-PL': 'Polish', 'de-de': 'German', 'sv-SE': 'Swedish', 'nb-no': 'Norwegian', 'it-it': 'Italian'}
 
         audio = speech.types.RecognitionAudio(content=f.getvalue())
         config = speech.types.RecognitionConfig(
             encoding=speech.enums.RecognitionConfig.AudioEncoding.LINEAR16,
-            sample_rate_hertz=48000,
+        #    sample_rate_hertz=sampleRate,
             language_code=first_lang,
             alternative_language_codes=[second_lang,third_lang,fourth_lang])
 
@@ -85,12 +84,13 @@ def test_disconnect():
             if confidence > 0.8:
                 confidence = int(confidence *100)
                 languages = language[language_code]
+                print('language : ' + languages)
                 emit('my_response',
-                    {'data': 'I am %s percent confident that you are speaking %s' %(confidence,languages), 'count': session['receive_count']})
+                    {'data': 'I am %s percent confident that you are speaking %s \n' %(confidence,languages)})
             else : 
                 config = speech.types.RecognitionConfig(
                 encoding=speech.enums.RecognitionConfig.AudioEncoding.LINEAR16,
-                sample_rate_hertz=44100,
+            #    sample_rate_hertz=sampleRate,
                 language_code=fifth_lang,
                 alternative_language_codes=[sixth_lang,seventh_lang,eighth_lang])
 
@@ -104,11 +104,12 @@ def test_disconnect():
                     if confidence > 0.8:
                         confidence = int(confidence *100)
                         languages = language[language_code]
+                        print('language : ' + languages)
                         emit('my_response',
-                            {'data': 'I am %s percent confident that you are speaking %s' %(confidence,languages), 'count': session['receive_count']})
+                            {'data': 'I am %s percent confident that you are speaking %s \n' %(confidence,languages)})
                     else:
                         emit('my_response',
-                            {'data': 'Sorry we could not recognise that language. Try speaking clearly', 'count': session['receive_count']})
+                            {'data': 'Sorry we could not recognise that language. Try speaking clearly \n'})
 
     disconnect()
 

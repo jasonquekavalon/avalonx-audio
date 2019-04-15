@@ -94,9 +94,7 @@
                 <form id="disconnect" class="btn btn-outline-primary" method="POST" action="#" novalidate>
                     <input type="submit" value="Stop">
                 </form>
-                <!--<div class="spinner-border spinner-border-sm" role="status">-->
-                    <span class="sr-only">Loading...</span>
-                </div>
+
                 <h3 id="log"></h3>
                 <script type="text/javascript">
                 var namespace = '/test';
@@ -170,6 +168,7 @@
                           mediaStream.getAudioTracks()[0].stop();
                           audio_context.close();
                           socket.emit('disconnect_request');
+                          socket.emit('test_disconnect');
                           $('#connect input')[0].disabled = false;
                           $('#disconnect input')[0].disabled = true;
                           return false;
