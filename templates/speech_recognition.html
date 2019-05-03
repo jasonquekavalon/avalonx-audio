@@ -53,25 +53,28 @@
                     <nav id="tmMainNav" class="tm-main-nav">
                         <ul>
                             <li>
-                                <a href="/" id="tmNavLink1" class="scrolly" data-bg-img="constructive_bg_10.jpg" data-page="#tm-section-1">
+                                <img type="image/png" src="static/img/logo.png" class= "center"></img>
+                            </li>
+                            <li>
+                                <a href="/" id="tmNavLink1" class="scrolly" data-bg-img="constructive_bg.jpg">
                                     <i class="fas fa-home tm-nav-fa-icon"></i>
                                     <span>Chat With Me!</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="/products" class="scrolly active" data-bg-img="constructive_bg_10.jpg" data-page="#tm-section-2">
+                                <a href="/products" class="scrolly active" data-bg-img="constructive_bg.jpg">
                                     <i class="fas fa-map tm-nav-fa-icon"></i>
-                                    <span>Play a game!</span>
+                                    <span>Play ML games!</span>
                                 </a>
                             </li>                            
                             <li>
-                                <a href="/company" class="scrolly" data-bg-img="constructive_bg_10.jpg"  data-page="#tm-section-3">
+                                <a href="/company" class="scrolly" data-bg-img="constructive_bg.jpg">
                                     <i class="fas fa-users tm-nav-fa-icon"></i>
-                                    <span>About Avalon Solutions</span>
+                                    <span>About Avalon by Devoteam</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="/contact" id="tmNavLink4" class="scrolly" data-bg-img="constructive_bg_10.jpg"  data-page="#tm-section-4">
+                                <a href="/contact" id="tmNavLink4" class="scrolly" data-bg-img="constructive_bg.jpg">
                                     <i class="fas fa-comments tm-nav-fa-icon"></i>
                                     <span>Contact Us</span>
                                 </a>
@@ -82,10 +85,24 @@
             </div>
             
             <div class="col-xl-9 col-lg-8 col-md-12 col-sm-12 tm-content">
-            <!-- game 3 -->
+
+                <!-- game 3 -->
             <section>
                 <div class="row mb-4">
                     <header class="col-xl-12"><h1 class="tm-text-shadow">Speech Recognition</h1></header>    
+                    <div><h3 style="color: rgba(246,72,85); font-weight:bold;">What is this?</h3></div>
+                    <div><p>
+                        This is a Machine Learning model powered by Google Cloud Platform (GCP). 
+                        Using Google's pre-trained Speech-to-Text recognition, we are able to adapt the model to recognise languages instead
+                        Explore other powers of GCP with us <a href="/products"><u>here!</u></a>
+                    </p></div> 
+                        
+                    <div><h3 style="color: rgba(246,72,85); font-weight:bold;">How does it work?</h3></div>
+                    <div><p>
+                        We have trained a language detection model based on thousands of transcripts.
+                        We used Google's Speech-to-Text recognition to transcribe what you are saying in real time and apply our language detection model on it.
+                        It is able to detect 8 languages currently: English, Swedish, Chinese, Polish, Spanish, German, Norwegian and Italian.
+                    </p></div>
                 </div>
                 
                 <form id="connect" class="btn btn-outline-primary" method="POST" action="#" novalidate>
@@ -96,6 +113,7 @@
                 </form>
 
                 <h3 id="log"></h3>
+                
                 <script type="text/javascript">
                 var namespace = '/test';
                       var socket = null;
@@ -147,12 +165,12 @@
                           if(socket == null){
                             socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
                             socket.on('connect', function() {
-                                socket.emit('my_event', {data: 'Detecting language...'});
                                 navigator.getUserMedia({audio: true}, initializeRecorder, function(a, b, c){
                                   console.log(a, b, c);
                                 });
                             });
                             socket.on('my_response', function(msg) {
+                                $('#log').empty();
                                 $('#log').append('<br>' + $('<div/>').text(msg.data).html());
                             });
                           }
@@ -165,9 +183,9 @@
                           return false;
                       });
                       $('form#disconnect').submit(function(event) {
+                          socket.emit('disconnect_request');
                           mediaStream.getAudioTracks()[0].stop();
                           audio_context.close();
-                          socket.emit('disconnect_request');
                           socket.emit('test_disconnect');
                           $('#connect input')[0].disabled = false;
                           $('#disconnect input')[0].disabled = true;

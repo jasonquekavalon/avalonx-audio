@@ -35,7 +35,7 @@ def handle_my_custom_event(audio):
     session['audio'] += values
 
 @socketio.on('disconnect_request', namespace='/test')
-def first_disconnect():
+def disconnect_request():
     emit('my_response',
         {'data': 'Detecting language...'})
 
@@ -62,7 +62,7 @@ def test_disconnect():
         fourth_lang = 'pl-PL' #polish
         fifth_lang = 'de-DE' #german
         sixth_lang = 'sv-SE' #swedish
-        seventh_lang = 'nb-NO' #norwegian
+        seventh_lang = 'id-ID' #bahasa indonesian
         eighth_lang = 'it-IT' #italian
 
         language = {'en-us': 'English', 'es': 'Spanish', 'cmn-hans-cn': 'Chinese', 'pl-PL': 'Polish', 'de-de': 'German', 'sv-SE': 'Swedish', 'nb-no': 'Norwegian', 'it-it': 'Italian'}
